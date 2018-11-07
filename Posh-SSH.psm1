@@ -301,7 +301,6 @@ function Invoke-SSHCommand
         }
     }
 
-
     Process
     {
         foreach($Connection in $ToProcess)

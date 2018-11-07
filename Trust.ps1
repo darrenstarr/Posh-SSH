@@ -8,6 +8,7 @@ function Get-SSHTrustedHost
     Begin{}
     Process
     {
+        Write-Host "Pizza"
         if($IsWindows) {
             $Test_Path_Result = Test-Path -Path "hkcu:\Software\PoshSSH"
             if ($Test_Path_Result -eq $false) {
@@ -27,7 +28,24 @@ function Get-SSHTrustedHost
                 $TrustedHosts += New-Object -TypeName psobject -Property $TrustedHost
             }
         } else {
-            throw "Platform not supported yet"
+            $knownHostsPath = "$HOME/.poshssh/known_hosts"
+
+            if(-not (Test-Path -Path $knownHostsPath)) {
+                Write-Verbose -Message 'No previous trusted keys have been configured on this system.'
+                New-Item -Path HKCU:\Software -Name PoshSSH | Out-Null
+                return
+            }
+
+            $knownHosts = ConvertFrom-Json -InputObject [System.IO.File]::ReadAllText($knownHostsPath)
+
+            $TrustedHosts = @()
+            foreach($h in $knownHosts) {
+                $TrustedHost = @{
+                    SSHHost = $h.Name
+                    Fingerprint = $h.Value
+                }
+                $TrustedHosts += New-Object -TypeName psobject -Property $TrustedHost
+            }
         }
     }
     End

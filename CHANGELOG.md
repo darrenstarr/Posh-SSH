@@ -1,5 +1,10 @@
 # ChangeLog
 
+## Version 2.0.3
+* Initial port to Powershell 6 and Powershell Core
+* On non-Windows sytems, keys are stored in $HOME/.poshssh/known_hosts as JSON
+* Caveats - It doesn't yet support the trust functions from powershell.
+
 ## Version 2.0.2
 
 * Set-SFTPContent will no longer add a BOM to UTF8 encoded files.
