@@ -44,6 +44,8 @@ local.properties
 # Build results
 [Dd]ebug/
 [Rr]elease/
+[Oo][Bb][Jj]/
+[Bb][Ii][Nn]/
 *_i.c
 *_p.c
 *.ilk
@@ -107,6 +109,7 @@ stylecop.*
 ~$*
 *.dbmdl
 Generated_Code #added for RIA/Silverlight projects
+.[Vv][Ss]
 
 # Backup & report files from converting an old project file to a newer
 # Visual Studio version. Backup files are not needed, because we have git ;-)
@@ -161,3 +164,4 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+obj/Debug/netstandard2.0/project.razor.json
