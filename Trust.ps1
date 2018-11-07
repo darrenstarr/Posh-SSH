@@ -1,56 +1,72 @@
-﻿# .ExternalHelp Posh-SSH.psm1-Help.xml
+﻿function WindowsGetSSHTrustedHost
+{
+    Begin{}
+    Process
+    {
+        $Test_Path_Result = Test-Path -Path "hkcu:\Software\PoshSSH"
+        if ($Test_Path_Result -eq $false) {
+            Write-Verbose -Message 'No previous trusted keys have been configured on this system.'
+            New-Item -Path HKCU:\Software -Name PoshSSH | Out-Null
+            return
+        }
+        $poshsshkey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\PoshSSH', $true)
+
+        $hostnames = $poshsshkey.GetValueNames()
+        $TrustedHosts = @()
+        foreach($h in $hostnames) {
+            $TrustedHost = @{
+                SSHHost        = $h
+                Fingerprint = $poshsshkey.GetValue($h)
+            }
+            $TrustedHosts += New-Object -TypeName psobject -Property $TrustedHost
+        }
+    }
+    End
+    {
+        $TrustedHosts
+    }
+}
+
+function UnixGetSSHTrustedHost
+{
+    Begin{}
+    Process
+    {
+        $knownHostsPath = "$HOME/.poshssh/known_hosts"
+
+        if(-not (Test-Path -Path $knownHostsPath)) {
+            Write-Verbose -Message 'No previous trusted keys have been configured on this system.'
+            return
+        }
+
+        $knownHosts = ConvertFrom-Json -InputObject ([System.IO.File]::ReadAllText($knownHostsPath))
+
+        $TrustedHosts = @()
+        foreach($h in $knownHosts.PSObject.Properties) {
+            $TrustedHost = @{
+                SSHHost = $h.Name
+                Fingerprint = $h.Value
+            }
+            $TrustedHosts += New-Object -TypeName psobject -Property $TrustedHost
+        }
+    }
+    End
+    {
+        $TrustedHosts
+    }
+ }
+
+# .ExternalHelp Posh-SSH.psm1-Help.xml
 function Get-SSHTrustedHost
 {
     [CmdletBinding()]
     [OutputType([int])]
     Param()
 
-    Begin{}
-    Process
-    {
-        Write-Host "Pizza"
-        if($IsWindows) {
-            $Test_Path_Result = Test-Path -Path "hkcu:\Software\PoshSSH"
-            if ($Test_Path_Result -eq $false) {
-                Write-Verbose -Message 'No previous trusted keys have been configured on this system.'
-                New-Item -Path HKCU:\Software -Name PoshSSH | Out-Null
-                return
-            }
-            $poshsshkey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\PoshSSH', $true)
-
-            $hostnames = $poshsshkey.GetValueNames()
-            $TrustedHosts = @()
-            foreach($h in $hostnames) {
-                $TrustedHost = @{
-                    SSHHost        = $h
-                    Fingerprint = $poshsshkey.GetValue($h)
-                }
-                $TrustedHosts += New-Object -TypeName psobject -Property $TrustedHost
-            }
-        } else {
-            $knownHostsPath = "$HOME/.poshssh/known_hosts"
-
-            if(-not (Test-Path -Path $knownHostsPath)) {
-                Write-Verbose -Message 'No previous trusted keys have been configured on this system.'
-                New-Item -Path HKCU:\Software -Name PoshSSH | Out-Null
-                return
-            }
-
-            $knownHosts = ConvertFrom-Json -InputObject [System.IO.File]::ReadAllText($knownHostsPath)
-
-            $TrustedHosts = @()
-            foreach($h in $knownHosts) {
-                $TrustedHost = @{
-                    SSHHost = $h.Name
-                    Fingerprint = $h.Value
-                }
-                $TrustedHosts += New-Object -TypeName psobject -Property $TrustedHost
-            }
-        }
-    }
-    End
-    {
-        $TrustedHosts
+    if($IsWindows) {
+        return (WindowsGetSSHTrustedHost)
+    } else {
+        return (UnixGetSSHTrustedHost)
     }
  }
 
